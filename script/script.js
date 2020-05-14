@@ -64,13 +64,16 @@ var app = new Vue({
     currentTranslateitems: {},
     cols:[],
     statusClick:{ col:false , button:false },
-    fileData : [
-      { id:"0", url:"es-ES.json", name:"🇪🇸 Espagnol", dataSet:{}},
-      { id:"1", url:"nl-BE.json", name:"🇳🇱 Néerlandais", dataSet:{}},
-      { id:"2", url:"it-IT.json", name:"🇮🇹 Italien", dataSet:{}},
-      { id:"3", url:"pt-PT.json", name:"🇵🇹 Portugais", dataSet:{}}
+    fileData : [],
+    emoji :[
+      {name:'fr-FR',emoji:'🇫🇷'},
+      {name:'es-ES',emoji:'🇪🇸'},
+      {name:'nl-BE',emoji:'🇳🇱'},
+      {name:'it-IT',emoji:'🇮🇹'},
+      {name:'pt-PT',emoji:'🇵🇹'}
     ],
-    currentLanguage : {}
+    currentLanguage : {},
+    folderUrl: "./data/"
   },
   methods: {
     // Interaction
@@ -140,17 +143,34 @@ var app = new Vue({
     },
     updateNavContent:function(){
       let dataSet = this.cloneData(this.fileData[this.currentLanguage.id].dataSet);
-      let isEnd = false; 
+      let isEnd = false;
       for(let i=0; i<this.cols.length; i++){
         // utiliser le getDataSet
         if(!isEnd) this.createCol(dataSet,i);
+        isEnd = true;
+
         if(this.cols[i].selected != undefined) {
-          // reactiver les selected
-          this.cols[i].value[this.cols[i].selected.id].active = true;
-          if(i == this.cols.length-2 ) this.cols[i].value[this.cols[i].selected.id].current = true;
-          let searchData = dataSet[this.cols[i].selected.label];
-          searchData != undefined ? dataSet = searchData : isEnd = true;
-        }else{ isEnd = true; }
+          isEnd = false;
+          let colSelectID = this.cols[i].selected;
+          let colSelectValue = this.cols[i].value[colSelectID.id];
+          if(colSelectValue != undefined){
+            if(colSelectValue.label === colSelectID.label){
+              // reactiver les selected
+              this.cols[i].value[colSelectID.id].active = true;
+              if(i == this.cols.length-2 ) this.cols[i].value[colSelectID.id].current = true;
+              let searchData = dataSet[colSelectID.label];
+              searchData != undefined ? dataSet = searchData : isEnd = true;
+            }else{
+              this.cols.splice(i+1,this.cols.length-(i+1));
+              this.cols[i].selected = undefined;
+              this.cols[i].active = true;
+            }
+          }else{
+            this.cols.splice(i+1,this.cols.length-(i+1));
+            this.cols[i].selected = undefined;
+            this.cols[i].active = true;
+          }
+        }
       }
     },
     createCol:function(data,idCol){
@@ -231,16 +251,121 @@ var app = new Vue({
     }
   },
   created(){
-    getFile(0,this);
+    getData(this,this.folderUrl,getFile,{_that:this,id:0});
+    
     // function to fetch file
-    function getFile(count,_that){
-      fetch('./data/'+_that.fileData[count].url)
-      .then(response => response.json())
-      .then(json => {
-        app.organiseDataStructure(_that.fileData[count].id,json)
+    function getFile(args){
+      let count = args.id;
+      let _that = args._that;
+      if(_that.fileData[count].extension === 'json'){
+        fetchJsonFile(count,_that);
+      }
+
+      if(_that.fileData[count].extension === 'xlf'){
+        fetchXLFfile(count,_that);
+      }
+    }
+    
+    function fetchXLFfile(count,_that){
+      fetch(_that.folderUrl+_that.fileData[count].url)
+      .then(response => response.text())
+      .then(file => {
+        let dataSource = labelInOut('<source>','</source>',file);
+        let dataTarget = labelInOut('<target>','</target>',file);
+        let json = {};
+
+        for(let i=0; i<dataSource.length; i++){
+          json[dataSource[i]]=dataTarget[i];
+        }
+        app.organiseDataStructure(_that.fileData[count].id,json);
         count++;
-        count < _that.fileData.length ? getFile(count,_that) : _that.initApp();
+        count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
       })
+    }
+
+    function labelInOut(texteIn, texteOut,fullTexte){
+      var positionIn = searchInFile(fullTexte,texteIn,texteIn.length);
+      var positionOut = searchInFile(fullTexte,texteOut,0);
+      var indexPositionList = [];
+      let substring = '';
+      for(let i=0; i<positionIn.length; i++){
+        substring = fullTexte.substring(positionIn[i],positionOut[i]);
+        indexPositionList.push(substring);
+      }
+      return indexPositionList;
+    }
+
+    function searchInFile(fullTexte,label,delta){
+      let indexOf = 0;
+      let indexPositionList = [];
+       while(indexOf != -1){
+          indexOf = fullTexte.indexOf(label,indexOf+label.length);
+          if(indexOf !=-1 ) indexPositionList.push(indexOf+delta);
+       }
+       return indexPositionList;
+    }
+
+    function fetchJsonFile(count,_that){
+      fetch(_that.folderUrl+_that.fileData[count].url)
+        .then(response => response.json())
+        .then(json => {
+          app.organiseDataStructure(_that.fileData[count].id,json);
+          count++;
+          count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
+        })
+    }
+
+    function getData(_that, folderUrl, successFunction, argSuccess){
+      jQuery.ajax({
+          type: "get",
+          url: "dir.php",
+          data :'folderUrl=' + folderUrl,
+          success : function(jsonFile){
+            let fileData = JSON.parse(jsonFile);
+            stockDataFile(fileData);
+            if(successFunction != undefined) successFunction(argSuccess);
+          },
+          complete:function(jqXHR, textStatus) {
+            //console.log("request complete "+textStatus);
+          },
+          error: function(xhr, textStatus, errorThrown){
+            console.log('request failed->'+errorThrown);
+          }
+        });
+    }
+    function stockDataFile(file){
+      for(let i=0; i<file.length; i++){
+        let splitFile = file[i].split('.');
+        let name = createName(app,splitFile);
+        let extension = splitFile[splitFile.length-1];
+        app.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
+      }
+
+      function createName(app,splitFile){
+        let name = '';
+        let foundEmoji = '';
+        for(let i=0; i<splitFile.length-1; i++){
+          if(i>0) name += '.'
+          name += splitFile[i];
+          foundEmoji = getEmoji(app,splitFile[i]);
+          name = foundEmoji+' '+name;
+        }
+        return name;
+      }
+
+      function getEmoji(app,txt){
+          let emo = '';
+          let splitTiretBas = txt.split('_');
+          if(splitTiretBas.length == 2){
+            txt = splitTiretBas[0]+"-"+splitTiretBas[1]
+          }
+          for(let i=0; i<app.emoji.length; i++){
+            if(txt === app.emoji[i].name){
+              emo += app.emoji[i].emoji;
+            }
+          }
+          return emo;
+        }
     }
   }
 })
