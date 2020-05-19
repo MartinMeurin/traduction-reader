@@ -40,6 +40,7 @@ Vue.component('col-item',{
     <div class="sidebar-sticky">\
       <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">\
         <span>col-{{col.id}}</span>\
+        <button type="button" class="" data-toggle="modal" data-target="#addItemModal" v-on:click="addModale"><span data-feather="plus"></span> Add entry</button>\
       </h6>\
       <ul class="nav flex-column mb-2">\
         <translate-item v-for="value in col.value" v-bind:translateitem="value" v-bind:col="col.id" v-bind:key="value.id"></translate-item>\
@@ -53,10 +54,40 @@ methods:{
       app.navigate();
     }
     app.resetStatusClick();
-  }
+  },
+  addModale:function(){
+    app.statusClick.col = this.col.id;
+    app.resetStatusInput();
+    // Préremplir le champ
+    let val = '/';
+    for(var i=0; i<app.cols.length-1; i++){
+      val += app.cols[i].selected.label+'/'; 
+    }
+    document.getElementById('Inputlabel').value = val;
+    document.getElementById('InputContent').value = '';
+    window.setTimeout(function () {
+        document.getElementById("Inputlabel").focus();
+    },1000);
+  },
 }
 })
-
+/*`
+//// Form bootstrap ///
+window.addEventListener('load', function() {
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.getElementsByClassName('needs-validation');
+    // Loop over them and prevent submission
+    var validation = Array.prototype.filter.call(forms, function(form) {
+      form.addEventListener('submit', function(event) {
+        if (form.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+  }, false);
+////*/
 
 var app = new Vue({
   el: '#app',
@@ -73,9 +104,115 @@ var app = new Vue({
       {name:'pt-PT',emoji:'🇵🇹'}
     ],
     currentLanguage : {},
-    folderUrl: "./data/"
+    folderUrl: "./data/",
+    errorFormMessage: {
+      label:{empty:"The label is missing", exist:"The URL is already exist, add label to new entry" },
+      content:{empty: "The content is missing"}
+    }
   },
   methods: {
+    //Form Interaction
+    validForm(event){
+      var form = event.target.parentNode.parentNode;
+      var label = document.getElementById('Inputlabel').value;
+      var content = document.getElementById('InputContent').value;
+      var labelInvalid = document.getElementById('labelInvalid');
+      var contentInvalid = document.getElementById('contentInvalid');
+      content = content.trim();
+      label = label.trim();
+
+      let isGoodContent = true;
+      let isGoodLabel = true;
+
+      // Verifier label
+      if(label.length > 0){
+          if(this.testIfAlreadyExist(label)){
+            labelInvalid.textContent = this.errorFormMessage.label.exist;
+            isGoodLabel = false;
+          }
+      }else{
+        contentInvalid.textLabel = this.errorFormMessage.label.empty;
+        isGoodLabel = false;
+      }
+
+      // Verifier label
+      if(content.length == 0 ){
+        isGoodContent = false;
+      }
+
+      //this.addEntry(app.statusClick.col, label);
+      
+      /*
+      ---
+      this.updateDataFile();
+      */
+      this.resetStatusInput();
+      this.changeFormStatus(isGoodLabel,'Inputlabel');
+      this.changeFormStatus(isGoodContent,'InputContent');
+      if(isGoodLabel && isGoodContent)this.updateDataFile(label,content);
+    },
+    updateDataFile(label,content){
+      let data = this.cleanData(label, content);
+      console.log(data);
+      
+
+      //let data[label] = content;
+      //: content;
+    },
+    cleanData(label,content){
+      let labelSplit = label.split('/');
+      let labelSplitClean = [];
+      for(let i=0; i<labelSplit.length; i++){
+        if(labelSplit[i] != ''){
+          labelSplitClean.push(labelSplit[i]); 
+        }
+      }
+      label = '';
+      for(let i=0; i<labelSplitClean.length; i++){
+        label += labelSplitClean[i];
+        if(i!=labelSplitClean.length-1){
+          label += '.';
+        }
+      }
+      return {label:label,content:content};
+    },
+    resetStatusInput(){
+      jQuery('#Inputlabel').removeClass('is-valid');
+      jQuery('#Inputlabel').removeClass('is-invalid');
+      jQuery('#InputContent').removeClass('is-valid');
+      jQuery('#InputContent').removeClass('is-invalid');
+    },
+    changeFormStatus(isGood, element){
+      let el = document.getElementById(''+element+'');
+      if(isGood){
+        el.classList.add("is-valid");
+      }else{
+        el.classList.add("is-invalid");
+      }
+    },
+    testIfAlreadyExist(label){
+      var labelSplit = label.split('/');
+      var cleanLabelSplit = [];
+      
+      for(let i=0; i<labelSplit.length; i++){
+        if(labelSplit[i] != ''){
+          cleanLabelSplit.push(labelSplit[i]);
+        }
+      }
+      // Verifier dans tous les chemins
+      if(cleanLabelSplit.length<=this.cols.length-1){
+        for(var i=0; i<this.cols.length-1; i++){
+          if(cleanLabelSplit[i] != undefined ){
+            if(this.cols[i].selected.label != cleanLabelSplit[i]){
+              console.log(this.cols[i].selected.label,cleanLabelSplit[i]);
+              return false;
+            } }
+        }
+      }else{
+        return false;
+      }
+      return true;
+    },
     // Interaction
     copyToClipboard(str){
       const el = document.createElement('textarea');
