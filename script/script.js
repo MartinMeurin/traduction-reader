@@ -13,7 +13,7 @@ Vue.component('translate-item', {
   props: ['translateitem','col'],
   template: '<li class="nav-item">\
       <a v-if="translateitem.value === undefined" v-on:click="gotToNextLevel" v-bind:class="{ active : translateitem.active, current : translateitem.current}" class="nav-link" href="#"> {{ translateitem.label }} <span data-feather="chevron-right"></span></a>\
-      <a v-if="translateitem.value" v-on:click="copyElement" href="#"> <span class="nav-link boldLabel">{{ translateitem.label }}</span> <span class="nav-link finalLabel" data-toggle="tooltip" data-placement="top" title="Click to copy">{{ translateitem.value }}</span> </a>\
+      <a v-if="translateitem.value" href="#"> <span class="nav-link boldLabel" v-on:click="editElement">{{ translateitem.label }} <span data-feather="edit-2"></span></span> <span class="nav-link finalLabel" data-toggle="tooltip" data-placement="top" title="Click to copy" v-on:click="copyElement">{{ translateitem.value }}</span> </a>\
     </li>',
 methods:{
   gotToNextLevel: function(event){
@@ -26,9 +26,13 @@ methods:{
     // Empecher que la colonne réalise un navigate
     //app.statusClick.button = true;
     let currentElement = this.$el.lastElementChild.lastElementChild;
+    console.log(this.$el);
     jQuery(currentElement).tooltip('show');
     app.copyToClipboard(this.translateitem.value);
     jQuery(currentElement).attr('data-original-title', "Copied !").tooltip('show');
+  },
+  editElement:function(event){
+
   }
 }
 })
@@ -38,9 +42,9 @@ Vue.component('col-item',{
   template: '\
   <nav v-bind:class="{ active:col.active }" v-on:click="clickOnNav" class="col-md-2 d-none d-md-block sidebar bg-light">\
     <div class="sidebar-sticky">\
-      <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">\
+      <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-4 text-muted">\
         <span>col-{{col.id}}</span>\
-        <button type="button" class="" data-toggle="modal" data-target="#addItemModal" v-on:click="addModale"><span data-feather="plus"></span> Add entry</button>\
+        <button type="button" class="" data-toggle="modal" data-target="#addItemModal" v-on:click="addModale"><span data-feather="plus"></span></button>\
       </h6>\
       <ul class="nav flex-column mb-2">\
         <translate-item v-for="value in col.value" v-bind:translateitem="value" v-bind:col="col.id" v-bind:key="value.id"></translate-item>\
@@ -153,11 +157,14 @@ var app = new Vue({
     },
     updateDataFile(label,content){
       let data = this.cleanData(label, content);
-      console.log(data);
-      
+      let dataSet = this.fileData[this.currentLanguage.id].dataSet;
+      dataSet[data.label] = data.content;
+      this.fileData[this.currentLanguage.id].dataSetOrganise = app.organiseDataStructure(dataSet);
+      this.currentLanguage = this.fileData[this.currentLanguage.id];
 
-      //let data[label] = content;
-      //: content;
+      jQuery('#addItemModal').modal('hide');
+      this.updateNavContent();
+      this.updateFile();
     },
     cleanData(label,content){
       let labelSplit = label.split('/');
@@ -260,7 +267,7 @@ var app = new Vue({
       return Object.assign({}, data, {})
     },
     getDataSet(){
-      let data = this.cloneData(this.fileData[this.currentLanguage.id].dataSet);
+      let data = this.cloneData(this.fileData[this.currentLanguage.id].dataSetOrganise);
       for(var i=0; i<this.cols.length; i++){
         data = data[ this.cols[i].selected.label ];
       }
@@ -279,7 +286,7 @@ var app = new Vue({
       }
     },
     updateNavContent:function(){
-      let dataSet = this.cloneData(this.fileData[this.currentLanguage.id].dataSet);
+      let dataSet = this.cloneData(this.fileData[this.currentLanguage.id].dataSetOrganise);
       let isEnd = false;
       for(let i=0; i<this.cols.length; i++){
         // utiliser le getDataSet
@@ -355,7 +362,7 @@ var app = new Vue({
     },
 
     /// Organise data
-    organiseDataStructure: function(id,jsonData){
+    organiseDataStructure: function(jsonData){
       let data = {};
       for (var value in jsonData){
         if (Array.isArray(jsonData[value]) || typeof jsonData[value] === 'object') {}
@@ -364,7 +371,7 @@ var app = new Vue({
           this.setItem(data, dataSplit, jsonData[value]);
         }  
       }
-      this.fileData[id].dataSet = data;
+      return data;
     },
     setItem: function(data, dataSplit,value){
       let items = data;
@@ -382,7 +389,7 @@ var app = new Vue({
       }
     },
     initApp:function(){
-      this.currentTranslateitems = this.fileData[0].dataSet;
+      this.currentTranslateitems = this.fileData[0].dataSetOrganise;
       this.currentLanguage = this.fileData[0];
       this.createCol(this.cloneData(this.currentTranslateitems));
     }
@@ -414,7 +421,9 @@ var app = new Vue({
         for(let i=0; i<dataSource.length; i++){
           json[dataSource[i]]=dataTarget[i];
         }
-        app.organiseDataStructure(_that.fileData[count].id,json);
+        //app.organiseDataStructure(_that.fileData[count].id,json);
+        _that.fileData[_that.fileData[count].id].dataSetOrganise = app.organiseDataStructure(json);
+        _that.fileData[_that.fileData[count].id].dataSet = json;
         count++;
         count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
       })
@@ -446,7 +455,9 @@ var app = new Vue({
       fetch(_that.folderUrl+_that.fileData[count].url)
         .then(response => response.json())
         .then(json => {
-          app.organiseDataStructure(_that.fileData[count].id,json);
+          //app.organiseDataStructure(_that.fileData[count].id,json);
+          _that.fileData[_that.fileData[count].id].dataSetOrganise = app.organiseDataStructure(json);
+          _that.fileData[_that.fileData[count].id].dataSet = json;
           count++;
           count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
         })
