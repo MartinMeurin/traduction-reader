@@ -8,12 +8,15 @@
 		name: 'TranslateFile',
 		props: {
 			translatefile: Object,
-			currentLanguage : Object;
+			currentLanguage : Object,
+			updateNavContent: Function,
 		},
 		methods:{
 			changeLabel: function(){
-				app.currentLanguage = this.translatefile;
-				app.updateNavContent()
+				//app.currentLanguage = this.translatefile;
+				//app.updateNavContent()
+				this.currentLanguage = this.translatefile;
+				this.updateNavContent()
 			}
 		}
 	}	

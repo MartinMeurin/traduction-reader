@@ -1,14 +1,14 @@
 <template>
   <div id="app">
-    <Modale />
-    <TableauData cols = cols/>
-    <SelectLanguage currentLanguage=app.currentLanguage.name fileData=fileData/>
+    <Modale resetStatusInput=resetStatusInput()></Modale>
+    <TableauData cols = cols statusClick=statusClick resetStatusClick=resetStatusClick() navigate=navigate()></TableauData>
+    <SelectLanguage currentLanguage=currentLanguage fileData=fileData() updateNavContent=updateNavContent()/></SelectLanguage>
   </div>
 </template>
 
 <script>
 import SelectLanguage from './components/SelectLanguage/SelectLanguage.vue'
-import Modale from './components/modale.vue'
+import Modale from './components/Modale.vue'
 import TableauData from './components/TableauData/TableauData.vue'
 
 export default {
@@ -39,7 +39,9 @@ export default {
       let data = this.cleanData(label, content);
       let dataSet = this.fileData[this.currentLanguage.id].dataSet;
       dataSet[data.label] = data.content;
-      this.fileData[this.currentLanguage.id].dataSetOrganise = app.organiseDataStructure(dataSet);
+      //app here
+      this.fileData[this.currentLanguage.id].dataSetOrganise = this.organiseDataStructure(dataSet);
+      ///
       this.currentLanguage = this.fileData[this.currentLanguage.id];
 
       window.jQuery('#addItemModal').modal('hide');
@@ -93,17 +95,6 @@ export default {
       return true;
     },
     // Interaction
-    copyToClipboard(str){
-      const el = document.createElement('textarea');
-      el.value = str;
-      el.setAttribute('readonly', '');
-      el.style.position = 'absolute';
-      el.style.left = '-9999px';
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-    },
     navigate(){
       let colID = this.statusClick.col;
       let id = this.statusClick.button ? this.statusClick.button.id : false;
@@ -293,7 +284,9 @@ export default {
           json[dataSource[i]]=dataTarget[i];
         }
         //app.organiseDataStructure(_that.fileData[count].id,json);
-        _that.fileData[_that.fileData[count].id].dataSetOrganise = app.organiseDataStructure(json);
+        /// app here
+        _that.fileData[_that.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
+        ///
         _that.fileData[_that.fileData[count].id].dataSet = json;
         count++;
         count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
@@ -327,7 +320,9 @@ export default {
         .then(response => response.json())
         .then(json => {
           //app.organiseDataStructure(_that.fileData[count].id,json);
-          _that.fileData[_that.fileData[count].id].dataSetOrganise = app.organiseDataStructure(json);
+          // app here
+          _that.fileData[_that.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
+          //
           _that.fileData[_that.fileData[count].id].dataSet = json;
           count++;
           count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
@@ -344,9 +339,9 @@ export default {
             stockDataFile(fileData);
             if(successFunction != undefined) successFunction(argSuccess);
           },
-          complete:function(jqXHR, textStatus) {
+          /*complete:function(jqXHR, textStatus) {
             //console.log("request complete "+textStatus);
-          },
+          },*/
           error: function(xhr, textStatus, errorThrown){
             console.log('request failed->'+errorThrown);
           }
@@ -355,9 +350,13 @@ export default {
     function stockDataFile(file){
       for(let i=0; i<file.length; i++){
         let splitFile = file[i].split('.');
-        let name = createName(app,splitFile);
+        //app here
+        let name = createName(this,splitFile);
+        //
         let extension = splitFile[splitFile.length-1];
-        app.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
+        //app here
+        this.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
+        //
       }
 
       function createName(app,splitFile){

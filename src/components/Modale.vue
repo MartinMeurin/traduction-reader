@@ -34,22 +34,25 @@
       </div>
     </div>
   </div>
-<template>
+</template>
   
 <script>
   export default {
     name: 'Modale',
     props: {
+      resetStatusInput:Function,
     },
-    data: {
-      errorFormMessage: {
-        label:{empty:"The label is missing", exist:"The URL is already exist, add label to new entry" },
-        content:{empty: "The content is missing"}
+    data() {
+     return {
+        errorFormMessage: {
+          label:{empty:"The label is missing", exist:"The URL is already exist, add label to new entry" },
+          content:{empty: "The content is missing"}
+        }
       }
     },
     methods:{
-      validForm(event){
-        var form = event.target.parentNode.parentNode;
+      validForm(){
+        //var form = event.target.parentNode.parentNode;
         
         // /!\ Réintégrer en tant qu'element vuejs dans MODALE/!\
         var label = document.getElementById('Inputlabel').value;
@@ -80,7 +83,7 @@
           isGoodContent = false;
         }
 
-        app.resetStatusInput();
+        this.resetStatusInput();
         this.changeFormStatus(isGoodLabel,'Inputlabel');
         this.changeFormStatus(isGoodContent,'InputContent');
         if(isGoodLabel && isGoodContent)this.updateDataFile(label,content);
