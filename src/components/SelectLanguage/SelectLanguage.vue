@@ -5,7 +5,7 @@
 			<!--{{app.currentLanguage.name}}-->
 		</button>
 		<div class="dropdown-menu">
-			<translateFile v-for='file in fileData' v-bind:translateFile='file' v-bind:key="file.id" currentLanguage=currentLanguage updateNavContent=updateNavContent></translateFile>
+			<translateFile v-for='file in fileData' v-bind:translateFile='file' v-bind:key="file.id"></translateFile>
 		</div>
 	</div>
 </template>
@@ -19,8 +19,7 @@
 		},
 		props: {
 			fileData : Array,
-			currentLanguage : String,
-			updateNavContent : Function
+			currentLanguage : Object
 		}
 	}
 </script>

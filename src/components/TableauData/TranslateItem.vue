@@ -20,14 +20,12 @@
     name: 'TranslateItem',
     props: {
       translateitem: Array,
-      statusClick:Object,
-      navigate:Function,
     },
     methods: {
       gotToNextLevel: function(){
-        this.statusClick.col = this.col;
-        this.statusClick.button = {"col":this.col,"id":this.translateitem.position, "label":this.translateitem.label};
-        this.navigate();
+        this.$root.statusClick.col = this.col;
+        this.$root.statusClick.button = {"col":this.col,"id":this.translateitem.position, "label":this.translateitem.label};
+        this.$root.navigate();
         window.jQuery('[data-toggle="tooltip"]').tooltip('hide');
       },
       copyElement: function () {

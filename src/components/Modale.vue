@@ -40,7 +40,6 @@
   export default {
     name: 'Modale',
     props: {
-      resetStatusInput:Function,
     },
     data() {
      return {
@@ -83,7 +82,7 @@
           isGoodContent = false;
         }
 
-        this.resetStatusInput();
+        this.$root.resetStatusInput();
         this.changeFormStatus(isGoodLabel,'Inputlabel');
         this.changeFormStatus(isGoodContent,'InputContent');
         if(isGoodLabel && isGoodContent)this.updateDataFile(label,content);

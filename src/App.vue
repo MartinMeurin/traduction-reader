@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <Modale resetStatusInput=resetStatusInput()></Modale>
-    <TableauData cols = cols statusClick=statusClick resetStatusClick=resetStatusClick() navigate=navigate()></TableauData>
-    <SelectLanguage currentLanguage=currentLanguage fileData=fileData() updateNavContent=updateNavContent()/></SelectLanguage>
+    <Modale></Modale>
+    <TableauData v-bind:cols="cols"></TableauData>
+    <SelectLanguage v-bind:currentLanguage="currentLanguage"></SelectLanguage>
   </div>
 </template>
 
@@ -285,7 +285,7 @@ export default {
         }
         //app.organiseDataStructure(_that.fileData[count].id,json);
         /// app here
-        _that.fileData[_that.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
+        _that.fileData[_that.fileData[count].id].dataSetOrganise = this.$root.organiseDataStructure(json);
         ///
         _that.fileData[_that.fileData[count].id].dataSet = json;
         count++;
@@ -321,7 +321,7 @@ export default {
         .then(json => {
           //app.organiseDataStructure(_that.fileData[count].id,json);
           // app here
-          _that.fileData[_that.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
+          _that.fileData[_that.fileData[count].id].dataSetOrganise = this.$root.organiseDataStructure(json);
           //
           _that.fileData[_that.fileData[count].id].dataSet = json;
           count++;
@@ -335,6 +335,7 @@ export default {
           url: "dir.php",
           data :'folderUrl=' + folderUrl,
           success : function(jsonFile){
+            console.log(jsonFile);
             let fileData = JSON.parse(jsonFile);
             stockDataFile(fileData);
             if(successFunction != undefined) successFunction(argSuccess);
@@ -351,11 +352,11 @@ export default {
       for(let i=0; i<file.length; i++){
         let splitFile = file[i].split('.');
         //app here
-        let name = createName(this,splitFile);
+        let name = createName(this.$root,splitFile);
         //
         let extension = splitFile[splitFile.length-1];
         //app here
-        this.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
+        this.$root.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
         //
       }
 

@@ -7,16 +7,14 @@
 	export default {
 		name: 'TranslateFile',
 		props: {
-			translatefile: Object,
-			currentLanguage : Object,
-			updateNavContent: Function,
+			translatefile: Object
 		},
 		methods:{
 			changeLabel: function(){
 				//app.currentLanguage = this.translatefile;
 				//app.updateNavContent()
-				this.currentLanguage = this.translatefile;
-				this.updateNavContent()
+				this.$root.currentLanguage = this.translatefile;
+				this.$root.updateNavContent()
 			}
 		}
 	}	

@@ -1,7 +1,7 @@
 <template>
 	<div class="container-fluid">
 		<div class="row">
-			<ColItem v-for='col in cols' v-bind:col='col' v-bind:key="col.id" statusClick=statusClick resetStatusClick=resetStatusClick navigate=navigate cols=cols></ColItem>
+			<ColItem v-for='col in cols' v-bind:col='col' v-bind:key="col.id"></ColItem>
 		</div>
 	</div>
 </template>
@@ -16,9 +16,6 @@
     },
     props: {
       cols: Array,
-      statusClick:Object,
-      resetStatusClick:Function,
-      navigate:Function
     }
   }
 </script>
