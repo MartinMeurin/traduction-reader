@@ -1,5 +1,5 @@
 {
-  "name": "traduction-reader",
+  "name": "tmp",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,8 +8,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "bootstrap": "^4.5.0",
     "core-js": "^3.6.5",
-    "jquery": "^3.5.1",
     "vue": "^2.6.11"
   },
   "devDependencies": {
@@ -33,9 +33,7 @@
     "parserOptions": {
       "parser": "babel-eslint"
     },
-    "rules": {
-      "no-debugger" : "off"
-    }
+    "rules": {}
   },
   "browserslist": [
     "> 1%",
