@@ -7,5 +7,9 @@ Vue.config.productionTip = false
 window.$ = window.jQuery = require('jquery');
 
 new Vue({
-  render: h => h(App),
+	data:{
+		statusClick:{ col:false , button:false },
+	},
+	render: h => h(App),
+
 }).$mount('#app')

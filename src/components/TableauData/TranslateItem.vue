@@ -19,7 +19,7 @@
   export default {
     name: 'TranslateItem',
     props: {
-      translateitem: Array,
+      translateitem: Object,
     },
     methods: {
       gotToNextLevel: function(){

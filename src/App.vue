@@ -17,11 +17,8 @@ export default {
     SelectLanguage, TableauData, Modale
   },
   data() {
-    return {
+    return{
       currentTranslateitems: {},
-      cols:[],
-      statusClick:{ col:false , button:false },
-      fileData : [],
       emoji :[
         {name:'fr-FR',emoji:'🇫🇷'},
         {name:'es-ES',emoji:'🇪🇸'},
@@ -29,9 +26,12 @@ export default {
         {name:'it-IT',emoji:'🇮🇹'},
         {name:'pt-PT',emoji:'🇵🇹'}
       ],
+      cols:[],
+      //statusClick:{ col:false , button:false },
+      fileData : [],
       currentLanguage : {},
-      folderUrl: "./data/",
-    }  
+      folderUrl: "./data/"
+    }
   },
   methods: {
     //Form Interaction
@@ -96,9 +96,9 @@ export default {
     },
     // Interaction
     navigate(){
-      let colID = this.statusClick.col;
-      let id = this.statusClick.button ? this.statusClick.button.id : false;
-      let label = this.statusClick.button ? this.statusClick.button.label : false;
+      let colID = this.$root.statusClick.col;
+      let id = this.$root.statusClick.button ? this.$root.statusClick.button.id : false;
+      let label = this.$root.statusClick.button ? this.$root.statusClick.button.label : false;
 
       this.resetCurrentStatuts();
       // remove all colonne after
@@ -124,7 +124,7 @@ export default {
       }
     },
     resetStatusClick(){
-      this.statusClick = {col:false,button:false}
+      this.$root.statusClick = {col:false,button:false}
     },
     cloneData(data){
       return Object.assign({}, data, {})
@@ -254,30 +254,26 @@ export default {
       this.currentTranslateitems = this.fileData[0].dataSetOrganise;
       this.currentLanguage = this.fileData[0];
       this.createCol(this.cloneData(this.currentTranslateitems));
-    }
-  },
-  created(){
-    getData(this,this.folderUrl,getFile,{_that:this,id:0});
-    
-    // function to fetch file
-    function getFile(args){
-      let count = args.id;
-      let _that = args._that;
-      if(_that.fileData[count].extension === 'json'){
-        fetchJsonFile(count,_that);
+    },
+
+    // GET DATA
+    getFile(id){
+      let count = id;
+      if(this.fileData[count].extension === 'json'){
+        this.fetchJsonFile(count);
       }
 
-      if(_that.fileData[count].extension === 'xlf'){
-        fetchXLFfile(count,_that);
+      if(this.fileData[count].extension === 'xlf'){
+        this.fetchXLFfile(count);
       }
-    }
+    },
     
-    function fetchXLFfile(count,_that){
-      fetch(_that.folderUrl+_that.fileData[count].url)
+    fetchXLFfile(count){
+      fetch(this.folderUrl+this.fileData[count].url)
       .then(response => response.text())
       .then(file => {
-        let dataSource = labelInOut('<source>','</source>',file);
-        let dataTarget = labelInOut('<target>','</target>',file);
+        let dataSource = this.labelInOut('<source>','</source>',file);
+        let dataTarget = this.labelInOut('<target>','</target>',file);
         let json = {};
 
         for(let i=0; i<dataSource.length; i++){
@@ -285,17 +281,17 @@ export default {
         }
         //app.organiseDataStructure(_that.fileData[count].id,json);
         /// app here
-        _that.fileData[_that.fileData[count].id].dataSetOrganise = this.$root.organiseDataStructure(json);
+        this.fileData[this.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
         ///
-        _that.fileData[_that.fileData[count].id].dataSet = json;
+        this.fileData[this.fileData[count].id].dataSet = json;
         count++;
-        count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
+        count < this.fileData.length ? this.getFile(count) : this.initApp();
       })
-    }
+    },
 
-    function labelInOut(texteIn, texteOut,fullTexte){
-      var positionIn = searchInFile(fullTexte,texteIn,texteIn.length);
-      var positionOut = searchInFile(fullTexte,texteOut,0);
+    labelInOut(texteIn, texteOut,fullTexte){
+      var positionIn = this.searchInFile(fullTexte,texteIn,texteIn.length);
+      var positionOut = this.searchInFile(fullTexte,texteOut,0);
       var indexPositionList = [];
       let substring = '';
       for(let i=0; i<positionIn.length; i++){
@@ -303,9 +299,9 @@ export default {
         indexPositionList.push(substring);
       }
       return indexPositionList;
-    }
+    },
 
-    function searchInFile(fullTexte,label,delta){
+    searchInFile(fullTexte,label,delta){
       let indexOf = 0;
       let indexPositionList = [];
        while(indexOf != -1){
@@ -313,79 +309,77 @@ export default {
           if(indexOf !=-1 ) indexPositionList.push(indexOf+delta);
        }
        return indexPositionList;
-    }
+    },
 
-    function fetchJsonFile(count,_that){
-      fetch(_that.folderUrl+_that.fileData[count].url)
+    fetchJsonFile(count){
+      console.log(this.folderUrl+this.fileData[count].url);
+      fetch(this.folderUrl+this.fileData[count].url)
         .then(response => response.json())
         .then(json => {
           //app.organiseDataStructure(_that.fileData[count].id,json);
-          // app here
-          _that.fileData[_that.fileData[count].id].dataSetOrganise = this.$root.organiseDataStructure(json);
-          //
-          _that.fileData[_that.fileData[count].id].dataSet = json;
+          this.fileData[this.fileData[count].id].dataSetOrganise = this.organiseDataStructure(json);
+          this.fileData[this.fileData[count].id].dataSet = json;
           count++;
-          count < _that.fileData.length ? getFile({_that:_that,id:count}) : _that.initApp();
+          count < this.fileData.length ? this.getFile(count) : this.initApp();
         })
-    }
+    },
 
-    function getData(_that, folderUrl, successFunction, argSuccess){
+    getData(){
       window.jQuery.ajax({
           type: "get",
-          url: "dir.php",
-          data :'folderUrl=' + folderUrl,
-          success : function(jsonFile){
-            console.log(jsonFile);
-            let fileData = JSON.parse(jsonFile);
-            stockDataFile(fileData);
-            if(successFunction != undefined) successFunction(argSuccess);
+          url: "/api/dir.php",
+          data :'folderUrl=./public/data/',
+          success:(jsonFile) =>{
+            this.stockDataFile(JSON.parse(jsonFile));
+            this.getFile(0);
           },
           /*complete:function(jqXHR, textStatus) {
             //console.log("request complete "+textStatus);
           },*/
-          error: function(xhr, textStatus, errorThrown){
+          error(xhr, textStatus, errorThrown){
             console.log('request failed->'+errorThrown);
           }
         });
-    }
-    function stockDataFile(file){
-      for(let i=0; i<file.length; i++){
-        let splitFile = file[i].split('.');
-        //app here
-        let name = createName(this.$root,splitFile);
-        //
-        let extension = splitFile[splitFile.length-1];
-        //app here
-        this.$root.fileData.push({ id:i, url:file[i], name:name, extension:extension, dataSet:{}});
-        //
-      }
-
-      function createName(app,splitFile){
-        let name = '';
-        let foundEmoji = '';
-        for(let i=0; i<splitFile.length-1; i++){
-          if(i>0) name += '.'
-          name += splitFile[i];
-          foundEmoji = getEmoji(app,splitFile[i]);
-          name = foundEmoji+' '+name;
-        }
-        return name;
-      }
-
-      function getEmoji(app,txt){
+    },
+    stockDataFile(file){
+      const getEmoji = (emoji,txt) => {
           let emo = '';
           let splitTiretBas = txt.split('_');
           if(splitTiretBas.length == 2){
             txt = splitTiretBas[0]+"-"+splitTiretBas[1]
           }
-          for(let i=0; i<app.emoji.length; i++){
-            if(txt === app.emoji[i].name){
-              emo += app.emoji[i].emoji;
+          for(let i=0; i<emoji.length; i++){
+            if(txt === emoji[i].name){
+              emo += emoji[i].emoji;
             }
           }
           return emo;
+      }
+      const createName = (splitFile) => {
+        let name = '';
+        let foundEmoji = '';
+        for(let i=0; i<splitFile.length-1; i++){
+          if(i>0) name += '.'
+          name += splitFile[i];
+          foundEmoji = getEmoji(this.emoji,splitFile[i]);
+          name = foundEmoji+' '+name;
         }
+        return name;
+      }
+
+      for(let id=0; id<file.length; id++){
+        let splitFile = file[id].split('.');
+        let name = createName(splitFile);
+        let extension = splitFile[splitFile.length-1];
+        this.fileData.push({ id, url:file[id], name, extension, dataSet:{}});
+      }
     }
+  },
+  created(){
+    this.getData();
+    
+    // function to fetch file
+
   }
 }
 </script>
