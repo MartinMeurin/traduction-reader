@@ -37,7 +37,7 @@
   </div>
   <div class="container-fluid">
     <div class="row">
-      <col-item v-for='col in cols' v-bind:col='col' v-bind:key="col.id"></col-item>
+      <col-item v-for='col in cols' :col='col' :key="col.id"></col-item>
     </div>
   </div>
   <div class="btn-group">
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-  import ColItem from './components/col-item'
+  import ColItem from './components/col-components/col-item'
   import data from './data/es-ES.json'
   import feather from 'feather-icons'
 
