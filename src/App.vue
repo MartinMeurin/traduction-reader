@@ -69,15 +69,7 @@
       }
     },
     methods: {
-      ///event
-      /*navigate(event){
-        this.statusClick.col = event.col;
-        if(event.source === 'keytrad') this.statusClick.button = event;
-        if(!this.statusClick.button) this.navigate();
-        if(event.source === 'nav') this.statusClick = {col:false,button:false};
-      },*/
-      ///
-      /// INTERACTION
+      ///EVENT
       navigate(event){
         let colID = event.col;
         let id = event.id;
@@ -105,6 +97,7 @@
           lastCol.value[lastCol.selected.id].current = true;
         }
       },
+      ////
       resetCurrentStatuts() {
         this.cols.forEach(col => {
           const idSelected = col.selected?.id;
