@@ -25,3 +25,11 @@ You can select add some language file in the data folder, the app detect it and 
 
 ## XLF supported !
 Your xlf file is supported and can be added in the data folder in the project. 
+
+
+
+##TODO
+• Clean foreach
+• Clean Template $emit
+• To store global sharing data VueX
+• Url Set - vue router

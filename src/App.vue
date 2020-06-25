@@ -37,7 +37,7 @@
   </div>
   <div class="container-fluid">
     <div class="row">
-      <col-item v-for='col in cols' :col='col' :key="col.id"></col-item>
+      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="navigate"></col-item>
     </div>
   </div>
   <div class="btn-group">
@@ -69,6 +69,56 @@
       }
     },
     methods: {
+      ///event
+      /*navigate(event){
+        this.statusClick.col = event.col;
+        if(event.source === 'keytrad') this.statusClick.button = event;
+        if(!this.statusClick.button) this.navigate();
+        if(event.source === 'nav') this.statusClick = {col:false,button:false};
+      },*/
+      ///
+      /// INTERACTION
+      navigate(event){
+        let colID = event.col;
+        let id = event.id;
+        let label = event.label;
+
+        this.resetCurrentStatuts();
+        // remove all colonne after
+        this.cols.splice(colID+1,this.cols.length-(colID+1));
+        
+        // set selected cols
+        this.cols[colID].selected = {"id":id, "label":label};
+        this.setLabelStatus(colID,id);
+
+        // create new nav
+        if(typeof id === 'number'){
+          this.createCol({...this.getDataSet()});
+        }else{
+          // reactiver la dernière nav
+          this.cols[this.cols.length-1].active = true;
+        }
+
+        // setting blue label à la fin de l'update
+        if(this.cols.length>1){
+          let lastCol = this.cols[this.cols.length-2];
+          lastCol.value[lastCol.selected.id].current = true;
+        }
+      },
+      resetCurrentStatuts() {
+        this.cols.forEach(col => {
+          const idSelected = col.selected?.id;
+          typeof idSelected === 'number' ? col.value[idSelected].current = false : false;
+        })
+      },
+      setLabelStatus(colID,id){
+        this.cols[colID].value.forEach((value,i) => (value.active = typeof id==='number' && i == id))
+      },
+      getDataSet(){
+        let data = {...this.fileData[this.currentLanguage.id].dataSetOrganise};
+        this.cols.forEach(col=> (data = data[ col.selected.label ]))
+        return data;
+      },
       ///
       organiseDataStructure(jsonData){
         let data = {};
