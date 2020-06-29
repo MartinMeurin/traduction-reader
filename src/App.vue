@@ -71,6 +71,7 @@
     methods: {
       ///EVENT
       navigate(event){
+        console.log(event);
         let colID = event.col;
         let id = event.id;
         let label = event.label;
