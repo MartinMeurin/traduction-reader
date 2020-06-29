@@ -1,43 +1,9 @@
 <template>
  <div id="app">
-  <div class="modal fade" id="addItemModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <form class="needs-validation" novalidate>
-          <div class="modal-header">
-            <h5 class="modal-title" id="modalLabel">Add traduction key</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <div class="form-group">
-              <label for="Inputlabel">Label</label>
-              <input type="texte" class="form-control" id="Inputlabel" aria-describedby="labelHelp" required>
-              <small id="labelHelp" class="form-text text-muted">You can use "/" to add colonne</small>
-              <div class="invalid-feedback" id="labelInvalid">
-                The label is missing 
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="InputContent">Content</label>
-              <input type="texte" class="form-control" id="InputContent" required>
-              <div class="invalid-feedback" id="contentInvalid">
-                The content is missing
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            <!--<button type="button" class="btn btn-primary"  v-on:click="validForm">Save changes</button>-->
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    <modale :translateitem="modalecontent"></modale>
   <div class="container-fluid">
     <div class="row">
-      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="navigate"></col-item>
+      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="navigate" @modale="modale"></col-item>
     </div>
   </div>
   <div class="btn-group">
@@ -55,23 +21,30 @@
   import ColItem from './components/col-components/col-item'
   import data from './data/es-ES.json'
   import feather from 'feather-icons'
+  import modale from './components/modale.vue'
 
   export default {
     name: 'App',
     components: {
-      ColItem
+      ColItem,
+      modale
     },
     data(){
       return{
         cols:[],
         fileData:[],
-        currentLanguage:{}
+        currentLanguage:{},
+        modalecontent:{label:''}
       }
     },
     methods: {
+      modale(event){
+        this.modalecontent={...event};
+        this.$bvModal.show("bvModal")
+        //this.$refs.modal.open()
+      },
       ///EVENT
       navigate(event){
-        console.log(event);
         let colID = event.col;
         let id = event.id;
         let label = event.label;
