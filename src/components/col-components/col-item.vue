@@ -22,23 +22,9 @@
     props:{
       col:Object
     },
-    data(){
-      return{
-        isNotNav:false
-      }
-    },
     methods:{
       clickOnNav() {
-        if(!this.isNotNav){
-          this.$emit('navigate',{col:this.col.id, source:'nav'})
-        }else{
-          this.isNotNav = false;
-        }
-        /*app.statusClick.col = this.col.id;
-        if(!app.statusClick.button){
-          app.navigate();
-        }
-        app.resetStatusClick();*/
+        this.$emit('navigate',{col:this.col.id})
       },
       addModale(){
         /*app.statusClick.col = this.col.id;
@@ -56,7 +42,6 @@
         */
       },
       navigateitem(event){
-        this.isNotNav = true;
         this.$emit('navigate',event);
       }
     }

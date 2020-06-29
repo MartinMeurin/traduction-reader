@@ -124,8 +124,7 @@
       },
       setItem(data, dataSplit,value){
         let items = data;
-        for(var i=0; i<dataSplit.length; i++){
-          let label = dataSplit[i];
+        dataSplit.forEach((label,i)=>{
           if(typeof items[label] !== 'undefined' &&  typeof items[label] !== 'string'){ items = items[label]; }
           else {
             if( i == dataSplit.length-1 ){
@@ -135,12 +134,13 @@
               items = items[label];
             }
           }
-        }
+        })
       },
       createCol(data,idCol){
-        for(let i=0; i<this.cols.length; i++){
-          this.cols[i].active = false;
-        }
+        this.cols.forEach(col=>{
+          col.active = false;
+        })
+
         let itemsCol = this.getDataCol(data);
 
         //create
