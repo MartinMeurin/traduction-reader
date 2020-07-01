@@ -1,26 +1,32 @@
 <template>
  <div id="app">
-    <modale :translateitem="modalecontent"></modale>
+  <modale :translateitem="modalecontent"></modale>
   <div class="container-fluid">
-    <div class="row">
-      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="navigate" @modale="modale"></col-item>
+    <div class="row" v-hotkey.stop="keymap">
+      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="updateCurrentItem" @modale="modale" ></col-item>
     </div>
   </div>
-  <div class="btn-group">
-    <button type="button" class="btn btn-langue dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-      <!--{{currentLanguage.name}}-->
-    </button>
-    <div class="dropdown-menu">
-      <!--<translate-file v-for='file in fileData' v-bind:translatefile='file' v-bind:key="file.id"></translate-file>-->
-    </div>
-  </div>
+  <b-button-toolbar key-nav aria-label="Toolbar with button groups">
+    <b-button-group class="mx-1">
+      <b-button variant="primary"> Add item </b-button>
+    </b-button-group>
+    <b-dropdown id="dropdown-1" class="mx-1" right text="Dropdown Button">
+        <b-dropdown-group id="dropdown-group-1" header="Json">
+          <b-dropdown-item-button active>🇪🇸 es-ES</b-dropdown-item-button>
+        </b-dropdown-group>
+        <b-dropdown-divider></b-dropdown-divider>
+        <b-dropdown-group id="dropdown-group-1" header="Xlif">
+          <b-dropdown-item-button>xlif file</b-dropdown-item-button>
+        </b-dropdown-group>
+        <!--<translate-file v-for='file in fileData' v-bind:translatefile='file' v-bind:key="file.id"></translate-file>-->
+    </b-dropdown>
+  </b-button-toolbar>
 </div>
 </template>
 
 <script>
   import ColItem from './components/col-components/col-item'
   import data from './data/es-ES.json'
-  import feather from 'feather-icons'
   import modale from './components/modale.vue'
 
   export default {
@@ -34,20 +40,64 @@
         cols:[],
         fileData:[],
         currentLanguage:{},
-        modalecontent:{label:''}
+        modalecontent:{label:''},
+        currentItem:{idCol:0}
       }
     },
+    
     methods: {
+      ///KEYEVENT
+      navigateKey(event){
+        let curridCol = 0;
+        let position = 0;
+        const key = event.key;
+        if(typeof this.currentItem?.position === 'number'){
+          curridCol = this.currentItem.idCol;
+          position = this.currentItem.position;
+          if(key == "ArrowDown" && position !== this.cols[curridCol].value.length-1){
+              if(this.cols[curridCol].value[position+1].value === undefined) position += 1;
+          }
+          if(key == "ArrowUp" && position !==0){
+            if(this.cols[curridCol].value[position-1].value === undefined) position -= 1;
+          }
+          if(key == "ArrowLeft" && curridCol !==0){
+            position = this.cols[curridCol-1].selected.id;
+            curridCol-=1;
+          }
+          if(key == "ArrowRight"){
+            if(this.cols[curridCol+1].value[0].value === undefined){
+              curridCol += 1;
+              position = 0;
+            }
+          }
+        }
+        this.updateCurrentItem(this.cols[curridCol].value[position]);
+      },
+      ///END KEYEVENT
+      ///EVENT
       modale(event){
         this.modalecontent={...event};
         this.$bvModal.show("bvModal")
         //this.$refs.modal.open()
       },
-      ///EVENT
-      navigate(event){
-        let colID = event.col;
-        let id = event.id;
-        let label = event.label;
+      updateCurrentItem(event){
+        if(event?.id){
+          this.currentItem = event;
+        }else{
+          if(event.idCol > 0){
+            const curridCol = this.cols[event.idCol-1]?.selected ? event.idCol-1 : event.ideCol-2;
+            const selectedId = this.cols[curridCol].selected.id;
+            this.currentItem = this.cols[curridCol].value[selectedId];
+          }else{
+            this.currentItem = {idCol:0};
+          }
+        }
+        this.navigate()
+      },
+      navigate(){
+        let colID = this.currentItem.idCol;
+        let id = this.currentItem.position;
+        let label = this.currentItem.label;
 
         this.resetCurrentStatuts();
         // remove all colonne after
@@ -71,7 +121,7 @@
           lastCol.value[lastCol.selected.id].current = true;
         }
       },
-      ////
+      //// END EVENT
       resetCurrentStatuts() {
         this.cols.forEach(col => {
           const idSelected = col.selected?.id;
@@ -88,21 +138,22 @@
       },
       ///
       organiseDataStructure(jsonData){
-        let data = {};
-        for (var value in jsonData){
-          if (!Array.isArray(jsonData[value]) || typeof jsonData[value] !== 'object') {
-            this.setItem(data, value.split('.'), jsonData[value]);
+        let dataSet = {};
+        for (const item in jsonData){
+          if (!Array.isArray(jsonData[item]) || typeof jsonData[item] !== 'object') {
+            this.setItem(dataSet, item, jsonData[item]);
           }
         }
-        return data;
+        return dataSet;
       },
-      setItem(data, dataSplit,value){
-        let items = data;
-        dataSplit.forEach((label,i)=>{
+      setItem(dataSet,path,value){
+        let items = dataSet;
+        const pathSplit = path.split('.')
+        pathSplit.forEach((label,i)=>{
           if(typeof items[label] !== 'undefined' &&  typeof items[label] !== 'string'){ items = items[label]; }
           else {
-            if( i == dataSplit.length-1 ){
-              items[label] = value;
+            if( i == pathSplit.length-1 ){
+              items[label] = {path,value};
             }else{
               items[label] = { };
               items = items[label];
@@ -110,7 +161,7 @@
           }
         })
       },
-      createCol(data,idCol){
+      createCol(data){
         this.cols.forEach(col=>{
           col.active = false;
         })
@@ -118,38 +169,36 @@
         let itemsCol = this.getDataCol(data);
 
         //create
-        if(idCol === undefined) this.cols.push({ "id":(this.cols.length), "active":false, "value":itemsCol });
+        //if(idCol === undefined) 
+        this.cols.push({ "id":(this.cols.length), "active":false, "value":itemsCol });
         //updateData ---- /!\ tester si j'ai le même jeux de data /!\
-        if(idCol != undefined){ 
+        /*if(idCol != undefined){
           this.cols[idCol].value = itemsCol;
-        }
-
+        }*/
         this.cols[this.cols.length-1].active = true;
-        this.$nextTick(() => { 
-          feather.replace();
-          //jQuery('[data-toggle="tooltip"]').tooltip();
-        })
       },
       getDataCol(data){
         let itemsCol = [];
         let endItems = [];
         let item = '';
-        let count = 0;
+        let position = 0;
         for(let label in data){
-          let idItem = this.cols.length+""+count+""+label;
-          item = { "id":idItem, "position":count, "label":label, "current":false, "active":false }
-          if(typeof data[label] === 'string'){ 
-            item.value = data[label]; 
+          const id = this.cols.length+""+position+""+label;
+          const idCol = this.cols.length;
+          item = {id,position,idCol,label,current:false,active:false }
+          if(data[label]?.value){ 
+            item.value = data[label].value;
+            item.path = data[label].path;
             endItems.push(item);
           } else {
             itemsCol.push(item);
-            count++;
+            position++;
           }
           
         }
         // place end item to the end of the list
         for(let i=0; i < endItems.length; i++){
-          endItems[i].id = count++;
+          endItems[i].id = position++;
           itemsCol.push( endItems[i] );
         }
         return itemsCol;
@@ -163,6 +212,16 @@
     created(){
       this.fileData.push({ id:0, name:'es-ES', extension:'json', dataSet:data, dataSetOrganise:this.organiseDataStructure(data)})
       this.initApp();
-    }
+    },
+    computed: {
+      keymap () {
+        return {
+          'up': { keydown:this.navigateKey },
+          'down': { keydown:this.navigateKey },
+          'right': { keydown:this.navigateKey },
+          'left': { keydown:this.navigateKey }
+        }
+      }
+    },
   }
 </script>

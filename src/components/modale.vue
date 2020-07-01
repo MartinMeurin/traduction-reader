@@ -4,8 +4,8 @@
 			<div class="modal-body">
 				<div class="form-group">
 					<label for="Inputlabel">Label</label>
-					<input type="texte" class="form-control" aria-describedby="labelHelp" required v-model="translateitem.label">
-					<small id="labelHelp" class="form-text text-muted">You can use "/" to add colonne</small>
+					<input type="texte" class="form-control" aria-describedby="labelHelp" required v-model="translateitem.path">
+					<small id="labelHelp" class="form-text text-muted">You can use "." to add colonne</small>
 					<div class="invalid-feedback" id="labelInvalid">
 						The label is missing 
 					</div>
