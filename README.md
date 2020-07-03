@@ -32,3 +32,6 @@ Your xlf file is supported and can be added in the data folder in the project.
 • Clean Template $emit
 • To store global sharing data VueX
 • Url Set - vue router
+
+• Change file with the dropdown menu
+• update the real file

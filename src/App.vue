@@ -1,14 +1,14 @@
 <template>
  <div id="app">
-  <modale :translateitem="modalecontent"></modale>
+  <modale :modalecontent="modalecontent" @validModale="validModale"></modale>
   <div class="container-fluid">
     <div class="row" v-hotkey.stop="keymap">
-      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="updateCurrentItem" @modale="modale" ></col-item>
+      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="updateCurrentItem" @modale="modale" @deleteItem="deleteItem"></col-item>
     </div>
   </div>
-  <b-button-toolbar key-nav aria-label="Toolbar with button groups">
+  <b-button-toolbar id='root-toolbar'>
     <b-button-group class="mx-1">
-      <b-button variant="primary"> Add item </b-button>
+      <b-button variant="primary" v-on:click="addElement"> Add item </b-button>
     </b-button-group>
     <b-dropdown id="dropdown-1" class="mx-1" right text="Dropdown Button">
         <b-dropdown-group id="dropdown-group-1" header="Json">
@@ -41,7 +41,7 @@
         fileData:[],
         currentLanguage:{},
         modalecontent:{label:''},
-        currentItem:{idCol:0}
+        currentItem:{nav:{idCol:-1}}
       }
     },
     
@@ -51,9 +51,10 @@
         let curridCol = 0;
         let position = 0;
         const key = event.key;
-        if(typeof this.currentItem?.position === 'number'){
-          curridCol = this.currentItem.idCol;
-          position = this.currentItem.position;
+        const currItemNav = this.currentItem.nav;
+        if(typeof currItemNav?.position === 'number'){
+          curridCol = currItemNav.idCol;
+          position = currItemNav.position;
           if(key == "ArrowDown" && position !== this.cols[curridCol].value.length-1){
               if(this.cols[curridCol].value[position+1].value === undefined) position += 1;
           }
@@ -76,40 +77,97 @@
       ///END KEYEVENT
       ///EVENT
       modale(event){
-        this.modalecontent={...event};
-        this.$bvModal.show("bvModal")
-        //this.$refs.modal.open()
+        this.modalecontent = {...event};
+        this.showModal();
+      },
+      validModale(event){
+        const path = event.path;
+        const value = event.value;
+        const isExist = this.currentLanguage.dataSet[path] ? true:false;
+        this.setItem(this.currentLanguage.dataSetOrganise,path,value);
+        this.setItem(this.fileData[this.currentLanguage.id].dataSetOrganise,path,value);
+        if(isExist){
+          const item = this.cols[event.idCol].value[event.id]
+          if(item){
+            if(item.label === event.label) item.value = event.value;
+          }
+          this.currentLanguage.dataSet[path] = event.value;
+          this.fileData[this.currentLanguage.id].dataSet[path] = event.value;
+        }
+        else{
+          this.currentLanguage.dataSet[path] = event.value;
+          this.organiseCol(path);
+        }
+        updateOriginalDataSet();
+        
+        //this.cols[event.idCol].value[event.id].content = ;
+      },
+      updateOriginalDataSet(){
+        this.fileData[this.currentLanguage.id] = this.currentLanguage;
+        // update original File
+      },
+      organiseCol(path){
+        this.cols=[];
+        this.createCol();
+        const pathSplit =  path.split('.')
+        pathSplit.splice(-1,1);
+        pathSplit.forEach((label,i)=>{
+            this.cols[i].value.forEach(item=>{
+              if(label === item.label){
+                this.currentItem.nav = item;
+              }
+            })
+            this.navigate()
+        });
+        
+      },
+      deleteItem(event){
+        this.cols[event.idCol].value.splice(event.id,1)
+        delete this.currentLanguage.dataSet[event.path];
+        // remove from the file
       },
       updateCurrentItem(event){
-        if(event?.id){
-          this.currentItem = event;
-        }else{
+        if(event.value != undefined){
+          this.currentItem.item = event
+        }
+        // on click sur une nav
+        let currentNav = event;
+        // on click sur une colonne ou une entrée
+        if(event.id == undefined || event.value != undefined ){
           if(event.idCol > 0){
-            const curridCol = this.cols[event.idCol-1]?.selected ? event.idCol-1 : event.ideCol-2;
+            const curridCol = this.cols[event.idCol-1]?.selected ? event.idCol-1 : event.idCol-2;
             const selectedId = this.cols[curridCol].selected.id;
-            this.currentItem = this.cols[curridCol].value[selectedId];
+            currentNav = this.cols[curridCol].value[selectedId];
           }else{
-            this.currentItem = {idCol:0};
+            currentNav = {idCol:0};
           }
         }
+        this.currentItem.nav = currentNav;
         this.navigate()
       },
+      //// END EVENT
+       addElement(){
+        this.modalecontent = {...this.currentItem.nav};
+        this.showModal();
+      },
+      showModal(){
+        this.$bvModal.show("bvModal")
+      },
       navigate(){
-        let colID = this.currentItem.idCol;
-        let id = this.currentItem.position;
-        let label = this.currentItem.label;
+        const colID = this.currentItem.nav.idCol;
+        const id = this.currentItem.nav.position;
+        const label = this.currentItem.nav.label;
 
         this.resetCurrentStatuts();
         // remove all colonne after
         this.cols.splice(colID+1,this.cols.length-(colID+1));
-        
-        // set selected cols
+
         this.cols[colID].selected = {"id":id, "label":label};
         this.setLabelStatus(colID,id);
 
         // create new nav
         if(typeof id === 'number'){
-          this.createCol({...this.getDataSet()});
+          this.createCol();
         }else{
           // reactiver la dernière nav
           this.cols[this.cols.length-1].active = true;
@@ -121,7 +179,6 @@
           lastCol.value[lastCol.selected.id].current = true;
         }
       },
-      //// END EVENT
       resetCurrentStatuts() {
         this.cols.forEach(col => {
           const idSelected = col.selected?.id;
@@ -133,8 +190,12 @@
       },
       getDataSet(){
         let data = {...this.fileData[this.currentLanguage.id].dataSetOrganise};
-        this.cols.forEach(col=> (data = data[ col.selected.label ]))
-        return data;
+        let path = "";
+        this.cols.forEach(col=> {
+          data = data[ col.selected.label ]
+          path += col.selected.label+".";
+        })
+        return {data,path};
       },
       ///
       organiseDataStructure(jsonData){
@@ -150,7 +211,7 @@
         let items = dataSet;
         const pathSplit = path.split('.')
         pathSplit.forEach((label,i)=>{
-          if(typeof items[label] !== 'undefined' &&  typeof items[label] !== 'string'){ items = items[label]; }
+          if(typeof items[label] !== 'undefined' &&  typeof items[label].path !== 'string'){ items = items[label]; }
           else {
             if( i == pathSplit.length-1 ){
               items[label] = {path,value};
@@ -161,13 +222,11 @@
           }
         })
       },
-      createCol(data){
+      createCol(){
         this.cols.forEach(col=>{
           col.active = false;
         })
-
-        let itemsCol = this.getDataCol(data);
-
+        let itemsCol = this.getDataCol();
         //create
         //if(idCol === undefined) 
         this.cols.push({ "id":(this.cols.length), "active":false, "value":itemsCol });
@@ -177,24 +236,28 @@
         }*/
         this.cols[this.cols.length-1].active = true;
       },
-      getDataCol(data){
+      getDataCol(){
+        const dataSet = this.getDataSet()
+        const data = dataSet.data;
+        let pathSource = dataSet.path;
         let itemsCol = [];
         let endItems = [];
         let item = '';
         let position = 0;
-        for(let label in data){
+        for(let label in dataSet.data){
           const id = this.cols.length+""+position+""+label;
           const idCol = this.cols.length;
-          item = {id,position,idCol,label,current:false,active:false }
+          let path = `${pathSource}${label}.`;
+          item = {id,position,path,idCol,label,current:false,active:false}
           if(data[label]?.value){ 
             item.value = data[label].value;
-            item.path = data[label].path;
+            item.path = item.path.substring(0, item.path.length - 1);
             endItems.push(item);
           } else {
+            path += '.';
             itemsCol.push(item);
             position++;
           }
-          
         }
         // place end item to the end of the list
         for(let i=0; i < endItems.length; i++){
@@ -206,7 +269,7 @@
       ///
       initApp(){
         this.currentLanguage = this.fileData[0];
-        this.createCol({...this.currentLanguage.dataSetOrganise});
+        this.createCol();
       }
     },
     created(){

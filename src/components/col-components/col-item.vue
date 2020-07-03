@@ -6,7 +6,7 @@
         <!--<button type="button" class="" data-toggle="modal" data-target="#addItemModal"><b-icon icon="plus" class="icon"></b-icon></button>-->
       </h6>
       <ul class="nav flex-column mb-2">
-        <translate-item v-for="value in col.value" :translateitem="value" :colNumber="col.id" :key="value.id" @navigate-item="navigateitem" @modale="modale"></translate-item>
+        <translate-item v-for="value in col.value" :translateitem="value" :colNumber="col.id" :key="value.id" @navigate-item="navigateitem" @modale="modale" @deleteItem="deleteItem"></translate-item>
       </ul>
     </div>
   </nav>
@@ -39,13 +39,13 @@
         */
       },
       navigateitem(event){
-        this.$emit('navigate',event);
+        this.$emit('navigate',event)
       },
       modale(event){
-        this.$emit('modale',event);
+        this.$emit('modale',event)
       },
-      selectItem(source){
-        console.log(source)
+      deleteItem(event){
+        this.$emit('deleteItem',event)
       }
     }
   }

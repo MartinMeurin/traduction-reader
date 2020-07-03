@@ -9,7 +9,9 @@ body {
   vertical-align: text-bottom;
 }
 
-.btn-toolbar{
+
+
+#root-toolbar{
   position:fixed;
   top: 8px;
   right: 8px;
@@ -131,12 +133,11 @@ body {
 }
 
 .sidebar .boldLabel .icon{
-  margin-left: 8px;
   display: none;
 }
 
 .sidebar .boldLabel .icon svg{
-  padding:3 4px;
+  padding:0;
   color:inherit;
 }
 
