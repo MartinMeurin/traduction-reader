@@ -28,7 +28,10 @@
   // DATA SET
   import dataEs from './data/es-ES.json'
   import dataIt from './data/it-IT.json'
+  import dataNlBe from './data/nl-BE.json'
+  import dataNl from './data/nl-NL.json'
   import dataPt from './data/pt-PT.json'
+  //import messagesfr_FR from './data/messages.fr_FR.xlf'
   //
 
   // TEMPLATE
@@ -49,14 +52,17 @@
         emoji :[
           {name:'fr-FR',emoji:'🇫🇷'},
           {name:'es-ES',emoji:'🇪🇸'},
-          {name:'nl-BE',emoji:'🇳🇱'},
+          {name:'nl-BE',emoji:'🇧🇪'},
+          {name:'nl-NL',emoji:'🇳🇱'},
           {name:'it-IT',emoji:'🇮🇹'},
           {name:'pt-PT',emoji:'🇵🇹'}
         ],
         dataFile:[
           {url:'./data/es-ES.json',dataSet:dataEs},
           {url:'./data/it-IT.json',dataSet:dataIt},
-          {url:'./data/pt-PT.json',dataSet:dataPt},
+          {url:'./data/nl-BE.json',dataSet:dataNlBe},
+          {url:'./data/nl-NL.json',dataSet:dataNl},
+          {url:'./data/pt-PT.json',dataSet:dataPt}
         ],
         cols:[],
         fileData:[],
@@ -126,9 +132,16 @@
         this.fileData[this.currentLanguage.id] = this.currentLanguage;
         // update original File
       },
-      organiseCol(path){
+      organiseCol(pathArg){
         this.cols=[];
         this.createCol();
+        let path = pathArg;
+        if(path === undefined && this.currentItem.nav.path){
+          path = this.currentItem.nav.path
+        }
+        if(path) this.navigateThoughPath(path)
+      },
+      navigateThoughPath(path){
         const pathSplit =  path.split('.')
         pathSplit.splice(-1,1);
         pathSplit.forEach((label,i)=>{
@@ -139,7 +152,6 @@
             })
             this.navigate()
         });
-        
       },
       deleteItem(event){
         this.cols[event.idCol].value.splice(event.id,1)
@@ -304,10 +316,11 @@
           item.key+=1
          })
         this.fileData[event.id].active = true
+
+        this.organiseCol()
       },
       initApp(){
         this.selectFile(this.fileData[0])
-        this.createCol();
       },
       uploadFile(){
         function getDataName(url,emojiData){
@@ -330,7 +343,7 @@
           const extension = datanameResult.ext
           const emoji = datanameResult.emoji
           const label = `${emoji}\n${name}`
-          const key = Math.floor(Math.random() * 100) + 1
+          const key = Math.floor(Math.random() * 100) + 1 /// Random int ( 0 - 100 )
           this.fileData.push({ id, key, name, extension, emoji, label, dataSet, dataSetOrganise})
         })
       }
@@ -348,6 +361,6 @@
           'left': { keydown:this.navigateKey }
         }
       }
-    },
+    }
   }
 </script>
