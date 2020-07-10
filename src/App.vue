@@ -12,11 +12,11 @@
     </b-button-group>
     <b-dropdown id="dropdown-1" class="mx-1 dropdownMenu" right :text=currentLanguage.label variant="outline-primary">
         <b-dropdown-group  id="dropdown-group-1" header="Json">
-          <dropdown-translate-item v-for='file in fileData' :file='file' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
+          <dropdown-translate-item v-for='file in fileData' :file='file' :isShow='file.extension === "json"' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
         </b-dropdown-group>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-group id="dropdown-group-1" header="Xlif">
-          <b-dropdown-item-button>xlif file</b-dropdown-item-button>
+          <dropdown-translate-item v-for='file in fileData' :file='file' :isShow='file.extension === "xlf"' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
         </b-dropdown-group>
         <!--<translate-file v-for='file in fileData' v-bind:translatefile='file' v-bind:key="file.id"></translate-file>-->
     </b-dropdown>
@@ -31,7 +31,7 @@
   import dataNlBe from './data/nl-BE.json'
   import dataNl from './data/nl-NL.json'
   import dataPt from './data/pt-PT.json'
-  //import messagesfr_FR from './data/messages.fr_FR.xlf'
+  import messagesfr_FR from 'raw-loader!./data/messages.fr_FR.xlf'
   //
 
   // TEMPLATE
@@ -50,19 +50,21 @@
     data(){
       return{
         emoji :[
-          {name:'fr-FR',emoji:'🇫🇷'},
-          {name:'es-ES',emoji:'🇪🇸'},
-          {name:'nl-BE',emoji:'🇧🇪'},
-          {name:'nl-NL',emoji:'🇳🇱'},
-          {name:'it-IT',emoji:'🇮🇹'},
-          {name:'pt-PT',emoji:'🇵🇹'}
+          {name:'FR',emoji:'🇫🇷'},
+          {name:'ES',emoji:'🇪🇸'},
+          {name:'NL',emoji:'🇳🇱'},
+          {name:'BE',emoji:'🇧🇪'},
+          {name:'IT',emoji:'🇮🇹'},
+          {name:'PT',emoji:'🇵🇹'},
+          {name:'FR',emoji:'🇫🇷'}
         ],
         dataFile:[
           {url:'./data/es-ES.json',dataSet:dataEs},
           {url:'./data/it-IT.json',dataSet:dataIt},
           {url:'./data/nl-BE.json',dataSet:dataNlBe},
           {url:'./data/nl-NL.json',dataSet:dataNl},
-          {url:'./data/pt-PT.json',dataSet:dataPt}
+          {url:'./data/pt-PT.json',dataSet:dataPt},
+          {url:'./data/messages.fr-FR.xlf',dataSet:messagesfr_FR}
         ],
         cols:[],
         fileData:[],
@@ -326,27 +328,62 @@
         function getDataName(url,emojiData){
           let dp = url.split('/')
           let df = dp[dp.length-1].split('.')
-          const name = df[0]
           const ext = df[df.length-1]
+          df.pop()
+          const name = df.join('.')
           let emoji =''
           emojiData.forEach(emo=>{
-            if(emo.name===name) emoji = emo.emoji
+            const regex = eval('/[a-zA-Z]*'+emo.name+'[a-zA-Z]*/')
+            if(regex.test(name)) emoji = emo.emoji
           })
           return {name,ext,emoji}
         }
         this.dataFile.forEach((dataNode,id)=>{
-          const dataSet = dataNode.dataSet
-          const dataSetOrganise = this.organiseDataStructure(dataSet)
-          
           const datanameResult = getDataName(dataNode.url,this.emoji);
           const name = datanameResult.name
           const extension = datanameResult.ext
           const emoji = datanameResult.emoji
           const label = `${emoji}\n${name}`
-          const key = Math.floor(Math.random() * 100) + 1 /// Random int ( 0 - 100 )
-          this.fileData.push({ id, key, name, extension, emoji, label, dataSet, dataSetOrganise})
+          const key = Math.floor(Math.random() * 100000) + 1 /// Random int ( 0 - 100 )
+          if(extension === 'xlf' || extension === 'xlif' || extension === 'json'){
+            if(extension === 'xlf') dataNode.dataSet = this.setupXlfFileData(dataNode.dataSet)
+            const dataSet = dataNode.dataSet
+            const dataSetOrganise = this.organiseDataStructure(dataSet)
+            this.fileData.push({ id, key, name, extension, emoji, label, dataSet, dataSetOrganise})
+          }
         })
+      },
+      /// XLF STUF
+      setupXlfFileData(file){
+        const dataSource = this.labelInOut('<source>','</source>',file);
+        const dataTarget = this.labelInOut('<target>','</target>',file);
+        let json = {};
+        dataSource.forEach((dataKey,index)=>{
+          json[dataKey] = dataTarget[index]
+        })
+        return json 
+      },
+      labelInOut(texteIn, texteOut, fullTexte){
+        const positionIn = this.searchInFile(fullTexte,texteIn,texteIn.length);
+        const positionOut = this.searchInFile(fullTexte,texteOut,0);
+        let indexPositionList = [];
+        let substring = '';
+        positionIn.forEach((inData,index)=>{
+          substring = fullTexte.substring(inData,positionOut[index]);
+          indexPositionList.push(substring);
+        })
+        return indexPositionList;
+      },
+      searchInFile(fullTexte,label,delta){
+        let indexOf = 0;
+        let indexPositionList = [];
+        while(indexOf != -1){
+            indexOf = fullTexte.indexOf(label,indexOf+label.length);
+            if(indexOf !=-1 ) indexPositionList.push(indexOf+delta);
+        }
+        return indexPositionList;
       }
+      ///
     },
     created(){
       this.uploadFile()

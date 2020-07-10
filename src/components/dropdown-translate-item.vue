@@ -1,11 +1,12 @@
 <template>
-	<b-dropdown-item-button :button-class="{active:file.active}" :alt=file.url @click.prevent="selectFile">{{file.label}}</b-dropdown-item-button>
+	<b-dropdown-item-button v-if="isShow" :button-class="{active:file.active}" :alt=file.url @click.prevent="selectFile">{{file.label}}</b-dropdown-item-button>
 </template>
 
 <script>
   export default{
     props:{
-      file:Object
+      file:Object,
+      isShow:Boolean
   },
   methods:{
    selectFile(){
