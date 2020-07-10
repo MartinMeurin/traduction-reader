@@ -32,15 +32,17 @@ Your xlf file is supported and can be added in the data folder in the project.
 
 Must have
 • update the real file + xlf compatibility
+• when no more item in colomn delete the precedent item
 
 Should have
 • fix - when you delete many key, there is a curious comportement
-• Ask for custom intelligent key in template node ( today use Random )
+• Webpack - require.context // For select folder
 
 Nice to have
+• Fix in chrome shortcut shut modale
 • when import file verify if there is a correct json or xlf file
 • warn about > Add key - already exist
 
 • Clean Template $emit
-• To store global sharing data VueX
+• To store global sharing data > VueX
 • Url Set - vue router

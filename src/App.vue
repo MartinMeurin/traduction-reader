@@ -12,11 +12,11 @@
     </b-button-group>
     <b-dropdown id="dropdown-1" class="mx-1 dropdownMenu" right :text=currentLanguage.label variant="outline-primary">
         <b-dropdown-group  id="dropdown-group-1" header="Json">
-          <dropdown-translate-item v-for='file in fileData' :file='file' :isShow='file.extension === "json"' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
+          <dropdown-translate-item v-for='file in fileData.json' :file='file' :isActive='file.active' :isShow='file.extension === "json"' :key='file.name' @selectFile="selectFile"> </dropdown-translate-item>
         </b-dropdown-group>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-group id="dropdown-group-1" header="Xlif">
-          <dropdown-translate-item v-for='file in fileData' :file='file' :isShow='file.extension === "xlf"' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
+          <dropdown-translate-item v-for='file in fileData.xlf' :file='file' :isActive='file.active' :isShow='file.extension === "xlf"' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
         </b-dropdown-group>
         <!--<translate-file v-for='file in fileData' v-bind:translatefile='file' v-bind:key="file.id"></translate-file>-->
     </b-dropdown>
@@ -58,7 +58,7 @@
           {name:'PT',emoji:'🇵🇹'},
           {name:'FR',emoji:'🇫🇷'}
         ],
-        dataFile:[
+        fileList:[
           {url:'./data/es-ES.json',dataSet:dataEs},
           {url:'./data/it-IT.json',dataSet:dataIt},
           {url:'./data/nl-BE.json',dataSet:dataNlBe},
@@ -67,7 +67,7 @@
           {url:'./data/messages.fr-FR.xlf',dataSet:messagesfr_FR}
         ],
         cols:[],
-        fileData:[],
+        fileData:{},
         currentLanguage:{},
         modalecontent:{label:''},
         currentItem:{nav:{idCol:-1}}
@@ -120,7 +120,7 @@
             if(item.label === event.label) item.value = event.value;
           }
           this.currentLanguage.dataSet[path] = event.value;
-          this.fileData[this.currentLanguage.id].dataSet[path] = event.value;
+          this.fileData[this.currentLanguage.extension].find(item => item.id === event.id).dataSet[path] = event.value;
         }
         else{
           this.currentLanguage.dataSet[path] = event.value;
@@ -131,7 +131,8 @@
         //this.cols[event.idCol].value[event.id].content = ;
       },
       updateOriginalDataSet(){
-        this.fileData[this.currentLanguage.id] = this.currentLanguage;
+        const id = this.fileData[this.currentLanguage.extension].findIndex(item => item.id === this.currentLanguage.id)
+        this.fileData[this.currentLanguage.extension][id] = this.currentLanguage;
         // update original File
       },
       organiseCol(pathArg){
@@ -233,7 +234,7 @@
         this.cols[colID].value.forEach((value,i) => (value.active = typeof id==='number' && i == id))
       },
       getDataSet(){
-        let data = {...this.fileData[this.currentLanguage.id].dataSetOrganise};
+        let data = {...this.fileData[this.currentLanguage.extension].find(item => item.id === this.currentLanguage.id).dataSetOrganise};
         let path = "";
         this.cols.forEach(col=> {
           data = data[ col.selected.label ]
@@ -271,13 +272,7 @@
           col.active = false;
         })
         let itemsCol = this.getDataCol();
-        //create
-        //if(idCol === undefined) 
         this.cols.push({ "id":(this.cols.length),"key":("col"+this.cols.length), "active":false, "value":itemsCol });
-        //updateData ---- /!\ tester si j'ai le même jeux de data /!\
-        /*if(idCol != undefined){
-          this.cols[idCol].value = itemsCol;
-        }*/
         this.cols[this.cols.length-1].active = true;
       },
       getDataCol(){
@@ -313,16 +308,15 @@
       ///
       selectFile(event){
         this.currentLanguage = event;
-        this.fileData.forEach(item=>{ 
-          item.active=false
-          item.key+=1
+        this.fileData[event.extension].forEach(item=>{
+            item.active=false
+            //item.key += 1
          })
-        this.fileData[event.id].active = true
-
+        this.fileData[event.extension].find(item => item.id === event.id).active = true
         this.organiseCol()
       },
       initApp(){
-        this.selectFile(this.fileData[0])
+        this.selectFile(this.fileData['json'][0])
       },
       uploadFile(){
         function getDataName(url,emojiData){
@@ -333,23 +327,24 @@
           const name = df.join('.')
           let emoji =''
           emojiData.forEach(emo=>{
-            const regex = eval('/[a-zA-Z]*'+emo.name+'[a-zA-Z]*/')
+            const regex = new RegExp(`[a-zA-Z]*${emo.name}[a-zA-Z]*`) 
             if(regex.test(name)) emoji = emo.emoji
           })
           return {name,ext,emoji}
         }
-        this.dataFile.forEach((dataNode,id)=>{
+        this.fileList.forEach((dataNode,id)=>{
           const datanameResult = getDataName(dataNode.url,this.emoji);
           const name = datanameResult.name
           const extension = datanameResult.ext
           const emoji = datanameResult.emoji
           const label = `${emoji}\n${name}`
-          const key = Math.floor(Math.random() * 100000) + 1 /// Random int ( 0 - 100 )
+          //const key = id /// Random int ( 0 - 100 )
           if(extension === 'xlf' || extension === 'xlif' || extension === 'json'){
             if(extension === 'xlf') dataNode.dataSet = this.setupXlfFileData(dataNode.dataSet)
             const dataSet = dataNode.dataSet
             const dataSetOrganise = this.organiseDataStructure(dataSet)
-            this.fileData.push({ id, key, name, extension, emoji, label, dataSet, dataSetOrganise})
+            if(!this.fileData[extension]) this.fileData[extension] = [] 
+            this.fileData[extension].push({ id, name, extension, emoji, label, dataSet, dataSetOrganise})
           }
         })
       },
