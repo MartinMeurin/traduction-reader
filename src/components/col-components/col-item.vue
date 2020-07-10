@@ -1,5 +1,5 @@
 <template>
-  <nav v-bind:class="{ active:col.active }" @click.prevent="navigateitem({idCol:col.id})" class="col-md-2 d-none d-md-block sidebar bg-light">
+  <nav :class="{ active:col.active }" @click.prevent="navigateitem({idCol:col.id})" class="col-md-2 d-none d-md-block sidebar bg-light">
     <div class="sidebar-sticky">
       <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-2 mb-2 text-muted">
         <span>col-{{col.id}}</span>

@@ -5,7 +5,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 import './assets/css/style.css'
 import Clipboard from 'v-clipboard'
 import VTooltip from 'v-tooltip'
-import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+import { BootstrapVue, IconsPlugin, BootstrapVueIcons } from 'bootstrap-vue'
 import VueHotkey from 'v-hotkey'
 
 Vue.config.productionTip = false
@@ -13,6 +13,7 @@ Vue.use(Clipboard)
 Vue.use(VTooltip)
 Vue.use(BootstrapVue)
 Vue.use(IconsPlugin)
+Vue.use(BootstrapVueIcons)
 Vue.use(VueHotkey)
 
 new Vue({

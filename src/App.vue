@@ -3,16 +3,16 @@
   <modale :modalecontent="modalecontent" @validModale="validModale"></modale>
   <div class="container-fluid">
     <div class="row" v-hotkey.stop="keymap">
-      <col-item v-for='col in cols' :col='col' :key="col.id" @navigate="updateCurrentItem" @modale="modale" @deleteItem="deleteItem"></col-item>
+      <col-item v-for='col in cols' :col='col' :key="col.key" @navigate="updateCurrentItem" @modale="modale" @deleteItem="deleteItem"></col-item>
     </div>
   </div>
   <b-button-toolbar id='root-toolbar'>
     <b-button-group class="mx-1">
       <b-button variant="primary" v-on:click="addElement"> Add item </b-button>
     </b-button-group>
-    <b-dropdown id="dropdown-1" class="mx-1" right text="Dropdown Button">
-        <b-dropdown-group id="dropdown-group-1" header="Json">
-          <b-dropdown-item-button active>🇪🇸 es-ES</b-dropdown-item-button>
+    <b-dropdown id="dropdown-1" class="mx-1 dropdownMenu" right :text=currentLanguage.label variant="outline-primary">
+        <b-dropdown-group  id="dropdown-group-1" header="Json">
+          <dropdown-translate-item v-for='file in fileData' :file='file' :key='file.key' @selectFile="selectFile"> </dropdown-translate-item>
         </b-dropdown-group>
         <b-dropdown-divider></b-dropdown-divider>
         <b-dropdown-group id="dropdown-group-1" header="Xlif">
@@ -25,18 +25,39 @@
 </template>
 
 <script>
+  // DATA SET
+  import dataEs from './data/es-ES.json'
+  import dataIt from './data/it-IT.json'
+  import dataPt from './data/pt-PT.json'
+  //
+
+  // TEMPLATE
   import ColItem from './components/col-components/col-item'
-  import data from './data/es-ES.json'
   import modale from './components/modale.vue'
+  import DropdownTranslateItem from './components/dropdown-translate-item.vue'
+  ///
 
   export default {
     name: 'App',
     components: {
       ColItem,
-      modale
+      modale,
+      DropdownTranslateItem, 
     },
     data(){
       return{
+        emoji :[
+          {name:'fr-FR',emoji:'🇫🇷'},
+          {name:'es-ES',emoji:'🇪🇸'},
+          {name:'nl-BE',emoji:'🇳🇱'},
+          {name:'it-IT',emoji:'🇮🇹'},
+          {name:'pt-PT',emoji:'🇵🇹'}
+        ],
+        dataFile:[
+          {url:'./data/es-ES.json',dataSet:dataEs},
+          {url:'./data/it-IT.json',dataSet:dataIt},
+          {url:'./data/pt-PT.json',dataSet:dataPt},
+        ],
         cols:[],
         fileData:[],
         currentLanguage:{},
@@ -85,7 +106,6 @@
         const value = event.value;
         const isExist = this.currentLanguage.dataSet[path] ? true:false;
         this.setItem(this.currentLanguage.dataSetOrganise,path,value);
-        this.setItem(this.fileData[this.currentLanguage.id].dataSetOrganise,path,value);
         if(isExist){
           const item = this.cols[event.idCol].value[event.id]
           if(item){
@@ -98,7 +118,7 @@
           this.currentLanguage.dataSet[path] = event.value;
           this.organiseCol(path);
         }
-        updateOriginalDataSet();
+        this.updateOriginalDataSet()
         
         //this.cols[event.idCol].value[event.id].content = ;
       },
@@ -124,7 +144,17 @@
       deleteItem(event){
         this.cols[event.idCol].value.splice(event.id,1)
         delete this.currentLanguage.dataSet[event.path];
-        // remove from the file
+        //remove from datasetorganise
+        const pathSplit = event.path.split('.')
+        let data = this.currentLanguage.dataSetOrganise;
+        pathSplit.forEach(item=>{
+          if(!data[item].path){
+            data = data[item]
+          }else{
+            delete data[item]
+          }
+        })
+        this.updateOriginalDataSet()
       },
       updateCurrentItem(event){
         if(event.value != undefined){
@@ -229,7 +259,7 @@
         let itemsCol = this.getDataCol();
         //create
         //if(idCol === undefined) 
-        this.cols.push({ "id":(this.cols.length), "active":false, "value":itemsCol });
+        this.cols.push({ "id":(this.cols.length),"key":("col"+this.cols.length), "active":false, "value":itemsCol });
         //updateData ---- /!\ tester si j'ai le même jeux de data /!\
         /*if(idCol != undefined){
           this.cols[idCol].value = itemsCol;
@@ -267,13 +297,46 @@
         return itemsCol;
       },
       ///
+      selectFile(event){
+        this.currentLanguage = event;
+        this.fileData.forEach(item=>{ 
+          item.active=false
+          item.key+=1
+         })
+        this.fileData[event.id].active = true
+      },
       initApp(){
-        this.currentLanguage = this.fileData[0];
+        this.selectFile(this.fileData[0])
         this.createCol();
+      },
+      uploadFile(){
+        function getDataName(url,emojiData){
+          let dp = url.split('/')
+          let df = dp[dp.length-1].split('.')
+          const name = df[0]
+          const ext = df[df.length-1]
+          let emoji =''
+          emojiData.forEach(emo=>{
+            if(emo.name===name) emoji = emo.emoji
+          })
+          return {name,ext,emoji}
+        }
+        this.dataFile.forEach((dataNode,id)=>{
+          const dataSet = dataNode.dataSet
+          const dataSetOrganise = this.organiseDataStructure(dataSet)
+          
+          const datanameResult = getDataName(dataNode.url,this.emoji);
+          const name = datanameResult.name
+          const extension = datanameResult.ext
+          const emoji = datanameResult.emoji
+          const label = `${emoji}\n${name}`
+          const key = Math.floor(Math.random() * 100) + 1
+          this.fileData.push({ id, key, name, extension, emoji, label, dataSet, dataSetOrganise})
+        })
       }
     },
     created(){
-      this.fileData.push({ id:0, name:'es-ES', extension:'json', dataSet:data, dataSetOrganise:this.organiseDataStructure(data)})
+      this.uploadFile()
       this.initApp();
     },
     computed: {

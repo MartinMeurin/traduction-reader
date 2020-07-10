@@ -1,16 +1,16 @@
 <template>
-	<b-modal id="bvModal" title="Add traduction key" hide-footer>
+	<b-modal id="bvModal" title="Add traduction key" @shown="focusInput" hide-footer>
 		<b-form v-if="show" @close="onClose" @submit="onSubmit">
 			<b-form-group
 			id="path-group" label="Path:" label-for="path" description="You can use '.' to add colonne"
 			>
-				<b-form-input id="path" v-model="modalecontent.path" :state="validPath" required placeholder="Enter path"></b-form-input>
+				<b-form-input ref="pathInput" v-model="modalecontent.path" :state="validPath" required placeholder="Enter path"></b-form-input>
 				<b-form-invalid-feedback :state="validPath">
 					The label is missing or there is a '.' to the end
 				</b-form-invalid-feedback>
 			</b-form-group>
 			<b-form-group id="content-group" label="Content:" label-for="content">
-				<b-form-textarea id="content" v-model="modalecontent.value" :state="validContent" required placeholder="Enter content"></b-form-textarea>
+				<b-form-textarea ref="contentInput" id="content" v-model="modalecontent.value" :state="validContent" required placeholder="Enter content"></b-form-textarea>
 				<b-form-invalid-feedback :state="validContent">
 					the content is missing or already exist
 				</b-form-invalid-feedback>
@@ -64,6 +64,13 @@
 			onClose(event){
 				event.preventDefault();
 				this.$bvModal.hide('bvModal')
+			},
+			focusInput() {
+				if(!this.validPath){this.$refs.pathInput.focus()}
+				else{
+					this.$refs.contentInput.focus()
+				}
+
 			}
 		}
 	}

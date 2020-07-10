@@ -35,3 +35,6 @@ Your xlf file is supported and can be added in the data folder in the project.
 
 • Change file with the dropdown menu
 • update the real file
+• fix - when you delete many key, there is a curious comportement
+
+• Ask for custom intelligent key ( today use Random )
