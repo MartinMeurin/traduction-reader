@@ -157,7 +157,7 @@
         });
       },
       deleteItem(event){
-        this.cols[event.idCol].value.splice(event.id,1)
+        //this.cols[event.idCol].value.splice(event.id,1)
         delete this.currentLanguage.dataSet[event.path];
         //remove from datasetorganise
         const pathSplit = event.path.split('.')
@@ -308,10 +308,11 @@
       ///
       selectFile(event){
         this.currentLanguage = event;
-        this.fileData[event.extension].forEach(item=>{
+        for (const extension in this.fileData){
+          this.fileData[extension].forEach(item=>{
             item.active=false
             //item.key += 1
-         })
+         })}
         this.fileData[event.extension].find(item => item.id === event.id).active = true
         this.organiseCol()
       },

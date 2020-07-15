@@ -23,6 +23,7 @@
     props:{
       colNumber:Number,
       translateitem:Object,
+      index:Number
     },
     data(){
       return{
@@ -47,7 +48,7 @@
         this.$emit('modale',modalSend)
       },
       deleteItem(){
-        this.$emit('deleteItem',this.translateitem)
+        this.$emit('deleteItem',{translateItem:this.translateitem,index:this.index})
       }
     }
   }

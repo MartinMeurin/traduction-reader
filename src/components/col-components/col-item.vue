@@ -6,7 +6,7 @@
         <!--<button type="button" class="" data-toggle="modal" data-target="#addItemModal"><b-icon icon="plus" class="icon"></b-icon></button>-->
       </h6>
       <ul class="nav flex-column mb-2">
-        <translate-item v-for="value in col.value" :translateitem="value" :colNumber="col.id" :key="value.id" @navigate-item="navigateitem" @modale="modale" @deleteItem="deleteItem"></translate-item>
+        <translate-item v-for="(value,index) in col.value" :translateitem="value" :colNumber="col.id" :key="value.id" @navigate-item="navigateitem" :index="index" @modale="modale" @deleteItem="deleteItem"></translate-item>
       </ul>
     </div>
   </nav>
@@ -23,21 +23,6 @@
       col:Object
     },
     methods:{
-      addModale(){
-        /*app.statusClick.col = this.col.id;
-        app.resetStatusInput();
-        // Préremplir le champ
-        let val = '/';
-        for(var i=0; i<app.cols.length-1; i++){
-          val += app.cols[i].selected.label+'/'; 
-        }
-        document.getElementById('Inputlabel').value = val;
-        document.getElementById('InputContent').value = '';
-        window.setTimeout(function () {
-            document.getElementById("Inputlabel").focus();
-        },1000);
-        */
-      },
       navigateitem(event){
         this.$emit('navigate',event)
       },
@@ -45,7 +30,8 @@
         this.$emit('modale',event)
       },
       deleteItem(event){
-        this.$emit('deleteItem',event)
+        this.col.value.splice(event.index,1)
+        this.$emit('deleteItem',event.translateItem)
       }
     }
   }
